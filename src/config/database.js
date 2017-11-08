@@ -1,13 +1,15 @@
 import Sequelize from 'sequelize';
 
-import { DB_CONFIG } from '../config/constants';
+import { DB_CONFIG } from './constants';
 
 const sequelize = new Sequelize(DB_CONFIG.url, {
   operatorsAliases: Sequelize.Op
 });
 
 const db = {
-  User: sequelize.import('./user')
+  User: sequelize.import('../models/user'),
+  LocalAuth: sequelize.import('../models/auth/local'),
+  SocialAuth: sequelize.import('../models/auth/social')
 };
 
 Object.keys(db).forEach((modelName) => {
