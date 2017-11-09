@@ -1,7 +1,8 @@
+import fetch from 'node-fetch';
 import passport from 'passport';
 import GithubStrategy from 'passport-github2';
 
-import { GITHUB } from '../constants';
+import { OAUTH } from '../constants';
 import models from '../database';
 
 passport.serializeUser((user, done) => {
@@ -13,17 +14,43 @@ passport.deserializeUser((user, done) => {
 });
 
 passport.use(new GithubStrategy({
-  clientID: GITHUB.id,
-  clientSecret: GITHUB.secret,
-  callbackURL: 'http://localhost:3001/auth/github/callback'
-}, (accessToken, refreshToken, profile, done) => {
-  // const user = await models.User.findOne({ where: { username: profile.username } });
+  clientID: OAUTH.GITHUB.clientId,
+  clientSecret: OAUTH.GITHUB.clientSecret,
+  callbackURL: 'http://localhost:3001/auth/github/callback',
+  passReqToCallback: true
+}, async (req, accessToken, refreshToken, profile, done) => {
+  try {
+    const response = await fetch(`https://api.github.com/user/emails?access_token=${accessToken}`).then((r) => r.json());
+    const { email } = response.find((e) => e.primary);
 
-  // console.log('user in strat', user);
+    let user = await models.User.findOne({
+      where: {
+        email
+      }
+    });
 
-  console.log(accessToken, refreshToken);
+    if (!user) {
+      user = await models.User.create({
+        email,
+        username: profile.username
+      });
 
-  console.log(profile);
+      let auth = await models.SocialAuth.create({
+        provider: 'github',
+        externalId: profile.id
+      });
 
-  return done(null, profile);
+      await user.addSocialAuth(auth);
+
+      return done(null, user);
+
+      // add social auth
+    } else {
+      // user with that email already exits, figure out how youd like to merge
+      return done(null, false);
+    }
+  } catch (error) {
+    console.log('error', error);
+    return done(error);
+  }
 }));
