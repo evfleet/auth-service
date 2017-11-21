@@ -8,7 +8,6 @@
     "dev": "cross-env NODE_ENV=development nodemon --watch src/ src/index.js --exec babel-node"
   },
   "dependencies": {
-    "add": "^2.0.6",
     "bcrypt": "^1.0.3",
     "body-parser": "^1.18.2",
     "connect-session-sequelize": "^5.0.1",

@@ -1,5 +1,3 @@
-import bcrypt from 'bcrypt';
-import crypto from 'crypto';
 import fetch from 'node-fetch';
 import passport from 'passport';
 import LocalStrategy from 'passport-local';

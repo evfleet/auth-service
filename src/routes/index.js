@@ -22,6 +22,8 @@ router.post('/register', async (req, res) => {
     // send verification email
     return res.json(createAPIResponse(true, { success: true }));
   } catch (error) {
+    console.log(error);
+
     if (error.name === 'SequelizeUniqueConstraintError' && error.fields) {
       const fields = Object.keys(error.fields);
 

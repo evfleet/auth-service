@@ -44,7 +44,7 @@ app.get('/auth/github/callback', passport.authenticate('github'), (req, res) => 
 });
 */
 
-models.sequelize.sync().then(() => {
+models.sequelize.sync({ force: true }).then(() => {
   app.listen(port, () => {
     console.log(`Server running on port: ${port}`);
   });
