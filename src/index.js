@@ -5,6 +5,7 @@ import session from 'express-session';
 import passport from 'passport';
 
 import './config/passport';
+import routes from './routes';
 import models from './config/database';
 import { SESSION_SECRET } from './config/constants';
 
@@ -23,24 +24,17 @@ app.use(session({
   store: new SequelizeStore({
     db: models.sequelize
   }),
+  saveUninitialized: false,
   resave: false,
-  saveUninitialized: true,
   proxy: true
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('/', (req, res) => {
-  // console.log('user', req.user);
+app.use('/auth', routes);
 
-  if (req.isAuthenticated()) {
-    res.json({ message: 'Hello logged in' });
-  } else {
-    res.json({ message: 'Not logged in' });
-  }
-});
-
+/*
 app.get('/auth/github', passport.authenticate('github', { scope: ['user:email'] }));
 
 app.get('/auth/github/callback', passport.authenticate('github'), (req, res) => {
@@ -48,6 +42,7 @@ app.get('/auth/github/callback', passport.authenticate('github'), (req, res) => 
     res.redirect('/');
   });
 });
+*/
 
 models.sequelize.sync().then(() => {
   app.listen(port, () => {

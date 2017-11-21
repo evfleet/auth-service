@@ -1,6 +1,10 @@
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import fetch from 'node-fetch';
 import passport from 'passport';
+import LocalStrategy from 'passport-local';
 import GithubStrategy from 'passport-github2';
+import BearerStrategy from 'passport-http-bearer';
 
 import { OAUTH } from '../constants';
 import models from '../database';
@@ -13,44 +17,46 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 });
 
+passport.use(new LocalStrategy({
+  usernameField: '',
+  passwordField: ''
+}, (username, password, done) => {
+
+}));
+
 passport.use(new GithubStrategy({
   clientID: OAUTH.GITHUB.clientId,
   clientSecret: OAUTH.GITHUB.clientSecret,
-  callbackURL: 'http://localhost:3001/auth/github/callback',
+  callbackURL: 'http://localhost:3001/authenticate/github/callback',
   passReqToCallback: true
-}, async (req, accessToken, refreshToken, profile, done) => {
+}, async (req, accessToken, refreshToken, { username, id }, done) => {
   try {
     const response = await fetch(`https://api.github.com/user/emails?access_token=${accessToken}`).then((r) => r.json());
     const { email } = response.find((e) => e.primary);
+    const [ user, created ] = await models.User.findCreateFind({ where: { email }, defaults: { username } });
 
-    let user = await models.User.findOne({
-      where: {
-        email
-      }
-    });
-
-    if (!user) {
-      user = await models.User.create({
-        email,
-        username: profile.username
-      });
-
-      let auth = await models.SocialAuth.create({
+    if (created) {
+      const auth = await models.SocialAuth.create({
         provider: 'github',
-        externalId: profile.id
+        externalId: id
       });
 
       await user.addSocialAuth(auth);
 
-      return done(null, user);
-
-      // add social auth
+      return done(null, { email, username });
     } else {
-      // user with that email already exits, figure out how youd like to merge
       return done(null, false);
     }
   } catch (error) {
     console.log('error', error);
     return done(error);
+  }
+}));
+
+passport.use('bearer', new BearerStrategy((token, done) => {
+  try {
+
+  } catch (error) {
+
   }
 }));
