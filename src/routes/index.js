@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import passport from 'passport';
 
 import models from '../config/database';
 import { createAPIResponse } from '../utils/helpers';
@@ -39,6 +40,24 @@ router.post('/register', async (req, res) => {
       return res.status(500).json(createAPIResponse(false, 'Unexpected server error', 500));
     }
   }
+});
+
+router.post('/login', async (req, res, next) => {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      console.log('error', err);
+
+      return res.status(500).json(createAPIResponse(false, 'Unexpected server error', 500));
+    }
+
+    if (!user) {
+      return res.status(info.code).json(createAPIResponse(false, info.message, info.code));
+    }
+
+    return res.json({
+      user
+    });
+  })(req, res, next);
 });
 
 export default router;

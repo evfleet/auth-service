@@ -1,8 +1,8 @@
-import argon2 from 'argon2';
+import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
 async function hashPassword(auth) {
-  auth.password = await argon2.hash(auth.password, { type: argon2.argon2i });
+  auth.password = await bcrypt.hash(auth.password, 12);
 }
 
 export default (sequelize, DataTypes) => {
@@ -33,7 +33,10 @@ export default (sequelize, DataTypes) => {
   });
 
   LocalAuth.prototype.comparePassword = async function(password) {
-    return argon2.verify(this.password, password);
+    console.log('password provided', password); // 12345678
+    console.log('hash', this.password); // $2a$12$x.RudW1A4YRULfkZKD1kL.a9lGb.bWzUWHwQSne6L7SkeR9utqgRG
+
+    return bcrypt.compare(password, this.password);
   };
 
   return LocalAuth;
