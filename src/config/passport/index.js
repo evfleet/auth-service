@@ -25,9 +25,6 @@ passport.use(new LocalStrategy({
   passwordField: 'password'
 }, async (account, password, done) => {
   try {
-    console.log('account', account); // evfleet@gmail.com
-    console.log('password', password); // 12345678
-
     const user = await models.User.findOne({
       where: {
         [models.sequelize.Op.or]: [
@@ -37,16 +34,8 @@ passport.use(new LocalStrategy({
       }
     });
 
-    console.log('user', user); // correct user, with id 1 etc
-
     const auth = await (user ? user.getLocalAuth() : false);
-
-    console.log('auth', auth); // correct auth, password hash being $2a$12$x.RudW1A4YRULfkZKD1kL.a9lGb.bWzUWHwQSne6L7SkeR9utqgRG
-
-    // auth/local model method
-    const validPassword = await auth.comparePassword(password);
-
-    console.log('valid', validPassword); // always false
+    const validPassword = await (auth ? auth.comparePassword(password) : false);
 
     if (!validPassword) {
       return done(null, false, { code: 401, message: 'Invalid account/password combination' });
@@ -86,7 +75,6 @@ passport.use(new GithubStrategy({
       return done(null, false);
     }
   } catch (error) {
-    console.log('error', error);
     return done(error);
   }
 }));
