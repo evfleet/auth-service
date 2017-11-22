@@ -3,6 +3,7 @@ import passport from 'passport';
 import LocalStrategy from 'passport-local';
 import GithubStrategy from 'passport-github2';
 import BearerStrategy from 'passport-http-bearer';
+import isEmail from 'validator/lib/isEmail';
 
 import { OAUTH } from '../constants';
 import models from '../database';
@@ -16,10 +17,40 @@ passport.deserializeUser((user, done) => {
 });
 
 passport.use(new LocalStrategy({
-  usernameField: '',
-  passwordField: ''
-}, (username, password, done) => {
+  usernameField: 'account',
+  passwordField: 'password',
+  passReqToCallback: true
+}, async (req, account, password, done) => {
+  try {
+    const user = await models.User.findOne({
+      where: {
+        $or: [
+          { email: account },
+          { username: account }
+        ]
+      }
+    });
 
+    const auth = await (user ? user.getLocalAuth() : false);
+
+    if (!user || !auth) {
+      console.log('no user');
+    }
+
+    const validPassword = await auth.comparePassword(password);
+
+    if (!validPassword) {
+
+    }
+
+    if (!auth.verified) {
+
+    }
+
+    // return login
+  } catch (error) {
+
+  }
 }));
 
 passport.use(new GithubStrategy({
